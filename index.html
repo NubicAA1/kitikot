@@ -40,7 +40,7 @@
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
-            border-left: 4px solid #e74c3c;
+            border-left: 4px solid #e74c3c; /* Оригинальный красный цвет */
         }
 
         h1 {
@@ -89,16 +89,36 @@
             border: 2px solid rgba(255, 255, 255, 0.15);
             border-radius: 6px;
             font-size: 15px;
-            background-color: rgba(255, 255, 255, 0.08);
+            background-color: rgba(30, 30, 40, 0.8);
             color: #fff;
             transition: all 0.3s ease;
         }
 
+        /* Стили для select чтобы сделать опции видимыми */
+        select {
+            background-color: rgba(30, 30, 40, 0.9);
+        }
+
+        select option {
+            background-color: #2c3e50;
+            color: #fff;
+            padding: 10px;
+            border: none;
+        }
+
+        select option:hover {
+            background-color: #3498db;
+        }
+
+        select option:checked {
+            background-color: #2980b9;
+        }
+
         input:focus, select:focus, textarea:focus {
-            border-color: #3498db;
+            border-color: #3498db; /* Оригинальный синий цвет */
             outline: none;
-            background-color: rgba(255, 255, 255, 0.12);
-            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+            background-color: rgba(40, 40, 50, 0.9);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); /* Оригинальный синий цвет */
         }
 
         input::placeholder, textarea::placeholder {
@@ -111,7 +131,7 @@
         }
 
         .submit-btn {
-            background: linear-gradient(to right, #e74c3c, #c0392b);
+            background: linear-gradient(to right, #e74c3c, #c0392b); /* Оригинальный красный градиент */
             color: white;
             border: none;
             padding: 14px 25px;
@@ -122,13 +142,13 @@
             width: 100%;
             font-weight: 600;
             margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3); /* Оригинальный красный цвет */
         }
 
         .submit-btn:hover {
-            background: linear-gradient(to right, #c0392b, #a93226);
+            background: linear-gradient(to right, #c0392b, #a93226); /* Оригинальный красный градиент */
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4); /* Оригинальный красный цвет */
         }
 
         .submit-btn:active {
@@ -175,16 +195,7 @@
 
         .required::after {
             content: " *";
-            color: #e74c3c;
-        }
-
-        .discord-info {
-            background-color: rgba(88, 101, 242, 0.15);
-            border-left: 4px solid #5865F2;
-            padding: 10px 15px;
-            margin-bottom: 20px;
-            border-radius: 0 6px 6px 0;
-            font-size: 0.9rem;
+            color: #e74c3c; /* Оригинальный красный цвет */
         }
 
         .loading {
@@ -196,7 +207,7 @@
         .spinner {
             border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            border-top: 3px solid #e74c3c;
+            border-top: 3px solid #e74c3c; /* Оригинальный красный цвет */
             width: 25px;
             height: 25px;
             animation: spin 1s linear infinite;
@@ -210,8 +221,8 @@
 
         .success-message {
             display: none;
-            background-color: rgba(46, 204, 113, 0.15);
-            border-left: 4px solid #2ecc71;
+            background-color: rgba(46, 204, 113, 0.15); /* Оригинальный зеленый цвет */
+            border-left: 4px solid #2ecc71; /* Оригинальный зеленый цвет */
             padding: 12px;
             margin-bottom: 15px;
             border-radius: 0 6px 6px 0;
@@ -229,17 +240,6 @@
             text-align: center;
             font-size: 0.9rem;
         }
-
-        .fib-badge {
-            display: inline-block;
-            background: #e74c3c;
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-weight: bold;
-            margin-right: 8px;
-        }
     </style>
 </head>
 <body>
@@ -247,28 +247,24 @@
         <header>
             <div class="fib-header">
                 <h1>Federal Investigation Bureau</h1>
-                <p class="fib-subtitle">📌 Рапорт на увольнение FIB</p>
+                <p class="fib-subtitle">Рапорт на увольнение FIB</p>
                 <p class="timestamp" id="current-time"></p>
             </div>
         </header>
 
         <div class="form-container">
-            <div class="discord-info">
-                <p>Все данные будут отправлены в Discord канал FIB для рассмотрения</p>
-            </div>
-
             <div class="success-message" id="success-message">
-                <p>✅ Рапорт успешно отправлен! Ожидайте ответа в Discord.</p>
+                <p>Рапорт успешно отправлен! Ожидайте ответа в Discord.</p>
             </div>
 
             <div class="error-message" id="error-message">
-                <p>❌ Ошибка при отправке рапорта. Пожалуйста, попробуйте еще раз.</p>
+                <p>Ошибка при отправке рапорта. Пожалуйста, попробуйте еще раз.</p>
             </div>
 
             <form id="resignation-form">
                 <div class="form-group">
                     <label for="discord-id" class="required">Ваш Discord ID:</label>
-                    <input type="text" id="discord-id" name="discord-id" placeholder="@HRT | Pheryw Valenkov | 289877" required>
+                    <input type="text" id="discord-id" name="discord-id" placeholder="384729184736281635" required>
                 </div>
 
                 <div class="form-group">
@@ -288,12 +284,15 @@
                             <label for="department" class="required">Ваш отдел:</label>
                             <select id="department" name="department" required>
                                 <option value="" disabled selected>Выберите отдел</option>
+                                <option value="DEA">DEA</option>
+                                <option value="CID">CID</option>
+                                <option value="IB">IB</option>
+                                <option value="AF">AF</option>
+                                <option value="NSB">NSB</option>
                                 <option value="HRT">HRT</option>
-                                <option value="SWAT">SWAT</option>
-                                <option value="Investigation">Следственный отдел</option>
-                                <option value="Patrol">Патрульная служба</option>
-                                <option value="Management">Руководство</option>
-                                <option value="other">Другой отдел</option>
+                                <option value="FA">FA</option>
+                                <option value="GS">GS</option>
+                                <option value="HRB">HRB</option>
                             </select>
                         </div>
                     </div>
@@ -320,7 +319,7 @@
                 </div>
 
                 <button type="submit" class="submit-btn" id="submit-btn">
-                    📌 Отправить рапорт на увольнение
+                    Отправить рапорт на увольнение
                 </button>
             </form>
 
@@ -366,7 +365,7 @@
             requiredFields.forEach(field => {
                 if (!field.value.trim()) {
                     allFilled = false;
-                    field.style.borderColor = '#e74c3c';
+                    field.style.borderColor = '#e74c3c'; /* Оригинальный красный цвет для ошибок */
                 } else {
                     field.style.borderColor = 'rgba(255, 255, 255, 0.15)';
                 }
@@ -390,28 +389,67 @@
                     department: document.getElementById('department').value,
                     tabletScreenshot: document.getElementById('tablet-screenshot').value,
                     inventoryScreenshot: document.getElementById('inventory-screenshot').value,
-                    reason: document.getElementById('reason').value,
-                    timestamp: new Date().toLocaleString('ru-RU', {
-                        day: 'numeric',
-                        month: 'long',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    })
+                    reason: document.getElementById('reason').value
                 };
                 
-                // Форматируем сообщение для Discord в точности как в примере
+                // Получаем текущее время в Unix timestamp
+                const now = new Date();
+                const unixTimestamp = Math.floor(now.getTime() / 1000);
+                
+                // Создаем embed сообщение с ярко-голубым цветом в Discord
                 const discordMessage = {
-                    username: 'Federal Investigation Bureau',
-                    avatar_url: 'https://cdn-icons-png.flaticon.com/512/2781/2781812.png',
-                    content: `📌 **Рапорт на увольнение FIB**\n\n` +
-                             `**Ваш Discord ID:**\n${formData.discordId}\n\n` +
-                             `**Имя Фамилия | Статик:**\n${formData.nameStatic}\n\n` +
-                             `**Ваш порядковый ранг:**\n${formData.rank}\n\n` +
-                             `**Ваш отдел:**\n${formData.department}\n\n` +
-                             `**Скриншот планшета со своим профилем:**\n${formData.tabletScreenshot}\n\n` +
-                             `**Скриншот инвентаря:**\n${formData.inventoryScreenshot}\n\n` +
-                             `**Причина увольнения:**\n${formData.reason}\n\n` +
-                             `*by cloudz89 • ${formData.timestamp}*`
+                    username: 'FIB Forms Bot',
+                    avatar_url: 'https://cdn-icons-png.flaticon.com/512/5968/5968524.png',
+                    content: `<@&1069528090679705622> | Время: <t:${unixTimestamp}:R>`,
+                    embeds: [
+                        {
+                            title: "Новый рапорт на увольнение",
+                            color: 65535, // Ярко-голубой цвет в Discord (00FFFF в HEX = 65535 в DEC)
+                            fields: [
+                                {
+                                    name: "Discord ID",
+                                    value: formData.discordId || "Не указано",
+                                    inline: true
+                                },
+                                {
+                                    name: "Имя Фамилия | Статик",
+                                    value: formData.nameStatic || "Не указано",
+                                    inline: false
+                                },
+                                {
+                                    name: "Порядковый ранг",
+                                    value: formData.rank || "Не указано",
+                                    inline: false
+                                },
+                                {
+                                    name: "Отдел",
+                                    value: formData.department || "Не указано",
+                                    inline: true
+                                },
+                                {
+                                    name: "Скриншот планшета со своим профилем",
+                                    value: formData.tabletScreenshot || "Не указано",
+                                    inline: false
+                                },
+                                {
+                                    name: "Скриншот инвентаря",
+                                    value: formData.inventoryScreenshot || "Не указано",
+                                    inline: false
+                                },
+                                {
+                                    name: "Причина увольнения",
+                                    value: formData.reason || "Не указано",
+                                    inline: false
+                                }
+                            ],
+                            image: {
+                                url: "https://cdn.discordapp.com/attachments/1056946150885822576/1440036120166535180/image.png?ex=691cb1a5&is=691b6025&hm=9fc0bbb1825dfe0501ee7f3ecafa0581629419295fc5ad5a6899be6dad65b43e&"
+                            },
+                            footer: {
+                                text: "by k.i.t.i.k.o.t"
+                            }
+                        }
+                    ]
                 };
                 
                 // Отправляем данные в Discord

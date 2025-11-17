@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Заявление на увольнение</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a2a3a 0%, #2c3e50 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #fff;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #bdc3c7;
+            margin-bottom: 20px;
+        }
+
+        .form-container {
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #ecf0f1;
+            font-size: 1.1rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #3498db;
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.3);
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 16px 30px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .submit-btn:hover {
+            background: linear-gradient(to right, #2980b9, #2573a7);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .form-note {
+            text-align: center;
+            margin-top: 20px;
+            color: #bdc3c7;
+            font-size: 0.9rem;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .form-container {
+                padding: 20px;
+            }
+        }
+
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+
+        .discord-info {
+            background-color: rgba(88, 101, 242, 0.2);
+            border-left: 4px solid #5865F2;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Заявление на увольнение</h1>
+            <p class="subtitle">Пожалуйста, заполните все поля формы для подачи заявления</p>
+        </header>
+
+        <div class="form-container">
+            <div class="discord-info">
+                <p>Пожалуйста, убедитесь, что все данные введены корректно, особенно ваш Discord ID</p>
+            </div>
+
+            <form id="resignation-form">
+                <div class="form-group">
+                    <label for="discord-id" class="required">Ваш Discord ID:</label>
+                    <input type="text" id="discord-id" name="discord-id" placeholder="Например: 1234567890123456789" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="name-static" class="required">Имя Фамилия | Статик:</label>
+                    <input type="text" id="name-static" name="name-static" placeholder="Сидел Stanton | 235478" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="rank" class="required">Ваш порядковый ранг:</label>
+                            <input type="text" id="rank" name="rank" required>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="department" class="required">Ваш отдел:</label>
+                            <select id="department" name="department" required>
+                                <option value="" disabled selected>Выберите отдел</option>
+                                <option value="hr">HR отдел</option>
+                                <option value="security">Отдел безопасности</option>
+                                <option value="logistics">Логистика</option>
+                                <option value="management">Менеджмент</option>
+                                <option value="other">Другой отдел</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="tablet-screenshot" class="required">Скриншот планшета со своим профилем:</label>
+                    <input type="url" id="tablet-screenshot" name="tablet-screenshot" placeholder="https://imgur.com/..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="inventory-screenshot" class="required">Скриншот инвентаря:</label>
+                    <input type="url" id="inventory-screenshot" name="inventory-screenshot" placeholder="https://imgur.com/..." required>
+                </div>
+
+                <div class="form-group">
+                    <label for="reason" class="required">Причина увольнения:</label>
+                    <textarea id="reason" name="reason" placeholder="Укажите причину вашего увольнения..." required></textarea>
+                </div>
+
+                <button type="submit" class="submit-btn">Подать заявление на увольнение</button>
+            </form>
+
+            <p class="form-note">Все поля, отмеченные *, обязательны для заполнения</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('resignation-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Проверка заполнения всех обязательных полей
+            const requiredFields = document.querySelectorAll('input[required], select[required], textarea[required]');
+            let allFilled = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    allFilled = false;
+                    field.style.borderColor = '#e74c3c';
+                } else {
+                    field.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                }
+            });
+            
+            if (!allFilled) {
+                alert('Пожалуйста, заполните все обязательные поля, отмеченные *');
+                return;
+            }
+            
+            // Проверка формата Discord ID (только цифры, 17-20 символов)
+            const discordId = document.getElementById('discord-id').value;
+            const discordIdRegex = /^\d{17,20}$/;
+            if (!discordIdRegex.test(discordId)) {
+                alert('Discord ID должен содержать только цифры (17-20 символов)');
+                document.getElementById('discord-id').style.borderColor = '#e74c3c';
+                return;
+            }
+            
+            // В реальном приложении здесь будет отправка данных на сервер
+            // В данном случае просто показываем сообщение об успехе
+            
+            alert('Ваше заявление на увольнение успешно отправлено! Ожидайте ответа в течение 3 рабочих дней.');
+            this.reset();
+        });
+
+        // Добавляем обработчики для сброса цвета границы при вводе
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    this.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

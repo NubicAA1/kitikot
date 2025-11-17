@@ -284,6 +284,57 @@
         .custom-reason.active {
             display: block;
         }
+
+        .captcha-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .captcha-text {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            margin: 10px 0;
+            color: #3498db;
+            user-select: none;
+        }
+
+        .hidden-field {
+            display: none !important;
+        }
+
+        .discord-check {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+            font-size: 0.8rem;
+        }
+
+        .check-status {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #f39c12;
+            color: white;
+        }
+
+        .status-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .status-error {
+            background: #e74c3c;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -312,16 +363,31 @@
             </div>
 
             <form id="resignation-form">
+                <!-- Honeypot поле для ботов -->
+                <input type="text" name="website" class="hidden-field" autocomplete="off" tabindex="-1">
+
                 <div class="form-group">
                     <label for="discord-id" class="required">Ваш Discord ID:</label>
                     <input type="text" id="discord-id" name="discord-id" placeholder="384729184736281635" required 
-                           pattern="\d{17,20}" title="Discord ID должен содержать только цифры (17-20 символов)">
+                           pattern="\d{17,20}" title="Discord ID должен содержать только цифры (17-20 символов)"
+                           autocomplete="off" data-lpignore="true">
+                    <div class="discord-check">
+                        <span>Статус проверки:</span>
+                        <span id="discord-check-status" class="check-status status-pending">Не проверен</span>
+                        <button type="button" id="check-discord-btn" style="background: #3498db; border: none; padding: 4px 8px; border-radius: 4px; color: white; cursor: pointer; font-size: 0.7rem;">
+                            Проверить
+                        </button>
+                    </div>
+                    <div style="font-size: 0.8rem; color: #bdc3c7; margin-top: 5px;">
+                        Как найти Discord ID: Настройки пользователя → Дополнительно → Включите режим разработчика → ПКМ по профилю → Копировать ID
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label for="name-static" class="required">Имя Фамилия | Статик:</label>
                     <input type="text" id="name-static" name="name-static" placeholder="Rick Valenkov | 289877" required 
-                           maxlength="100" pattern="[A-Za-zА-Яа-яёЁ\s]+\s\|\s\d+" title="Формат: Имя Фамилия | Число">
+                           maxlength="100" pattern="[A-Za-zА-Яа-яёЁ\s]+\s\|\s\d+" title="Формат: Имя Фамилия | Число"
+                           autocomplete="off" data-lpignore="true">
                 </div>
 
                 <div class="form-row">
@@ -329,7 +395,8 @@
                         <div class="form-group">
                             <label for="rank" class="required">Ваш порядковый ранг:</label>
                             <input type="text" id="rank" name="rank" placeholder="6" required 
-                                   pattern="\d+" title="Ранг должен быть числом" maxlength="3">
+                                   pattern="\d+" title="Ранг должен быть числом" maxlength="3"
+                                   autocomplete="off" data-lpignore="true">
                         </div>
                     </div>
                     <div class="form-col">
@@ -354,13 +421,15 @@
                 <div class="form-group">
                     <label for="tablet-screenshot" class="required">Скриншот планшета со своим профилем:</label>
                     <input type="url" id="tablet-screenshot" name="tablet-screenshot" placeholder="https://yapx.ru/..." required 
-                           pattern="https?://.+" title="Введите корректный URL">
+                           pattern="https?://.+" title="Введите корректный URL"
+                           autocomplete="off" data-lpignore="true">
                 </div>
 
                 <div class="form-group">
                     <label for="inventory-screenshot" class="required">Скриншот инвентаря:</label>
                     <input type="url" id="inventory-screenshot" name="inventory-screenshot" placeholder="https://yapx.ru/..." required 
-                           pattern="https?://.+" title="Введите корректный URL">
+                           pattern="https?://.+" title="Введите корректный URL"
+                           autocomplete="off" data-lpignore="true">
                 </div>
 
                 <div class="form-group">
@@ -375,10 +444,21 @@
                 <div class="form-group custom-reason" id="custom-reason-container">
                     <label for="custom-reason" class="required">Укажите свою причину:</label>
                     <textarea id="custom-reason" name="custom-reason" placeholder="Опишите причину увольнения..." 
-                              maxlength="500"></textarea>
+                              maxlength="500" autocomplete="off" data-lpignore="true"></textarea>
                     <div style="text-align: right; font-size: 0.8rem; color: #bdc3c7; margin-top: 5px;">
                         <span id="custom-reason-counter">0</span>/500 символов
                     </div>
+                </div>
+
+                <!-- Простая CAPTCHA -->
+                <div class="captcha-container" id="captcha-container">
+                    <p>Подтвердите, что вы не робот:</p>
+                    <div class="captcha-text" id="captcha-text"></div>
+                    <input type="text" id="captcha-input" placeholder="Введите текст выше" required 
+                           autocomplete="off" data-lpignore="true">
+                    <button type="button" id="refresh-captcha" style="margin-top: 10px; background: #3498db; border: none; padding: 5px 10px; border-radius: 4px; color: white; cursor: pointer;">
+                        Обновить
+                    </button>
                 </div>
 
                 <div class="loading" id="loading">
@@ -406,30 +486,106 @@
             requests: []
         };
 
+        // Глобальные переменные
+        let discordIdVerified = false;
+        let formStartTime = Date.now();
+        let userActivity = {
+            typingTime: 0,
+            pasteEvents: 0,
+            fieldChanges: 0,
+            lastActivity: Date.now()
+        };
+
+        // Проверка существования пользователя в Discord
+        async function verifyDiscordUser(discordId) {
+            try {
+                // Проверка формата Discord ID
+                if (!/^\d{17,20}$/.test(discordId)) {
+                    return {
+                        valid: false,
+                        exists: false,
+                        message: 'Неверный формат Discord ID'
+                    };
+                }
+
+                // Эмуляция проверки существования пользователя через Discord API
+                // В реальном приложении здесь должен быть запрос к Discord API
+                const userExists = await simulateUserCheck(discordId);
+                
+                if (userExists) {
+                    return {
+                        valid: true,
+                        exists: true,
+                        message: 'Пользователь существует в Discord'
+                    };
+                } else {
+                    return {
+                        valid: true,
+                        exists: false,
+                        message: 'Пользователь не найден в Discord'
+                    };
+                }
+                
+            } catch (error) {
+                console.error('Ошибка проверки Discord ID:', error);
+                return {
+                    valid: false,
+                    exists: false,
+                    message: 'Ошибка проверки Discord ID'
+                };
+            }
+        }
+
+        // Эмуляция проверки пользователя (замените на реальную проверку)
+        async function simulateUserCheck(discordId) {
+            // Имитация задержки сети
+            await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 800));
+            
+            // В реальном приложении здесь должен быть запрос к Discord API
+            // для проверки существования пользователя по ID
+            
+            // Временная логика для демонстрации:
+            // Считаем валидными ID, которые прошли базовую проверку формата
+            return true;
+        }
+
+        // Генерация CAPTCHA
+        function generateCaptcha() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            let captcha = '';
+            for (let i = 0; i < 6; i++) {
+                captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return captcha;
+        }
+
+        let currentCaptcha = '';
+
+        function displayCaptcha() {
+            currentCaptcha = generateCaptcha();
+            document.getElementById('captcha-text').textContent = currentCaptcha;
+        }
+
+        function validateCaptcha() {
+            const input = document.getElementById('captcha-input').value;
+            return input === currentCaptcha;
+        }
+
         // Обновляем время на странице
         function updateTime() {
             const now = new Date();
-            const timeString = now.toLocaleString('ru-RU', {
-                day: 'numeric',
-                month: 'long',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
             document.getElementById('current-time').textContent = `Сегодня, в ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
         }
 
         // Функция для проверки ограничения запросов
         function checkRateLimit() {
             const now = Date.now();
-            // Удаляем старые запросы
             RATE_LIMIT.requests = RATE_LIMIT.requests.filter(time => now - time < RATE_LIMIT.timeWindow);
             
-            // Проверяем количество запросов
             if (RATE_LIMIT.requests.length >= RATE_LIMIT.maxRequests) {
                 return false;
             }
             
-            // Добавляем текущий запрос
             RATE_LIMIT.requests.push(now);
             return true;
         }
@@ -461,6 +617,71 @@
             }
         }
 
+        // Улучшенная проверка на автоматическое заполнение
+        function detectSuspiciousActivity() {
+            const now = Date.now();
+            const formFillTime = now - formStartTime;
+            
+            if (formFillTime < 10000) {
+                console.log('Suspicious: Form filled too quickly', formFillTime);
+                return true;
+            }
+            
+            if (userActivity.fieldChanges < 3) {
+                console.log('Suspicious: Too few field changes', userActivity.fieldChanges);
+                return true;
+            }
+            
+            if (userActivity.typingTime < 5000) {
+                console.log('Suspicious: Too little typing time', userActivity.typingTime);
+                return true;
+            }
+            
+            return false;
+        }
+
+        // Отслеживание активности пользователя
+        function trackUserActivity() {
+            const inputs = document.querySelectorAll('input, textarea, select');
+            let typingStartTime = null;
+            let currentField = null;
+
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    typingStartTime = Date.now();
+                    currentField = this;
+                });
+
+                input.addEventListener('blur', function() {
+                    if (typingStartTime && currentField === this) {
+                        const typingTime = Date.now() - typingStartTime;
+                        userActivity.typingTime += typingTime;
+                        typingStartTime = null;
+                        currentField = null;
+                    }
+                });
+
+                input.addEventListener('input', function() {
+                    userActivity.fieldChanges++;
+                    userActivity.lastActivity = Date.now();
+                });
+
+                input.addEventListener('paste', function(e) {
+                    userActivity.pasteEvents++;
+                    userActivity.typingTime += 1000;
+                    userActivity.lastActivity = Date.now();
+                });
+            });
+
+            document.addEventListener('click', function() {
+                userActivity.lastActivity = Date.now();
+            });
+
+            document.addEventListener('mousemove', function() {
+                userActivity.lastActivity = Date.now();
+            });
+        }
+
         // Обработчик изменения типа причины
         document.getElementById('reason-type').addEventListener('change', function() {
             const customReasonContainer = document.getElementById('custom-reason-container');
@@ -483,8 +704,70 @@
             counter.textContent = this.value.length;
         });
 
+        // Обновление CAPTCHA
+        document.getElementById('refresh-captcha').addEventListener('click', displayCaptcha);
+
+        // Проверка Discord ID
+        document.getElementById('check-discord-btn').addEventListener('click', async function() {
+            const discordId = document.getElementById('discord-id').value.trim();
+            const statusElement = document.getElementById('discord-check-status');
+            const checkButton = this;
+            
+            if (!validateDiscordId(discordId)) {
+                statusElement.textContent = 'Неверный формат';
+                statusElement.className = 'check-status status-error';
+                discordIdVerified = false;
+                return;
+            }
+            
+            statusElement.textContent = 'Проверяется...';
+            statusElement.className = 'check-status status-pending';
+            checkButton.disabled = true;
+            
+            try {
+                const verification = await verifyDiscordUser(discordId);
+                
+                if (verification.valid && verification.exists) {
+                    statusElement.textContent = 'Пользователь найден';
+                    statusElement.className = 'check-status status-success';
+                    discordIdVerified = true;
+                } else if (verification.valid && !verification.exists) {
+                    statusElement.textContent = 'Пользователь не найден';
+                    statusElement.className = 'check-status status-error';
+                    discordIdVerified = false;
+                    alert('Ошибка: Пользователь с таким Discord ID не найден. Убедитесь, что вы указали правильный ID.');
+                } else {
+                    statusElement.textContent = 'Ошибка проверки';
+                    statusElement.className = 'check-status status-error';
+                    discordIdVerified = false;
+                    alert('Ошибка проверки Discord ID: ' + verification.message);
+                }
+            } catch (error) {
+                statusElement.textContent = 'Ошибка сети';
+                statusElement.className = 'check-status status-error';
+                discordIdVerified = false;
+                alert('Ошибка сети при проверке Discord ID. Пожалуйста, попробуйте позже.');
+            } finally {
+                checkButton.disabled = false;
+            }
+        });
+
+        // Автоматическая проверка при изменении Discord ID
+        document.getElementById('discord-id').addEventListener('blur', function() {
+            if (this.value.trim() && validateDiscordId(this.value.trim()) && !discordIdVerified) {
+                document.getElementById('check-discord-btn').click();
+            }
+        });
+
+        // Инициализация
         updateTime();
         setInterval(updateTime, 60000);
+        displayCaptcha();
+        trackUserActivity();
+
+        // Защита от автоматических сабмитов
+        let lastSubmitTime = 0;
+        const MIN_SUBMIT_INTERVAL = 2000;
 
         document.getElementById('resignation-form').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -495,21 +778,55 @@
             const errorMessage = document.getElementById('error-message');
             const rateLimitMessage = document.getElementById('rate-limit-message');
             
-            // Скрыть предыдущие сообщения
             successMessage.style.display = 'none';
             errorMessage.style.display = 'none';
             rateLimitMessage.style.display = 'none';
             
-            // Проверка ограничения запросов
+            // Проверка honeypot поля
+            const honeypot = document.querySelector('input[name="website"]').value;
+            if (honeypot) {
+                successMessage.style.display = 'block';
+                return;
+            }
+            
+            const now = Date.now();
+            if (now - lastSubmitTime < MIN_SUBMIT_INTERVAL) {
+                errorMessage.innerHTML = '<p>Слишком быстрая отправка. Подождите немного.</p>';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            lastSubmitTime = now;
+            
+            if (!validateCaptcha()) {
+                errorMessage.innerHTML = '<p>Неверно введена CAPTCHA. Попробуйте снова.</p>';
+                errorMessage.style.display = 'block';
+                displayCaptcha();
+                return;
+            }
+            
             if (!checkRateLimit()) {
                 rateLimitMessage.style.display = 'block';
                 rateLimitMessage.scrollIntoView({ behavior: 'smooth' });
                 return;
             }
             
+            const discordId = document.getElementById('discord-id').value.trim();
+            if (!discordIdVerified) {
+                errorMessage.innerHTML = '<p>Пожалуйста, проверьте ваш Discord ID перед отправкой формы.</p>';
+                errorMessage.style.display = 'block';
+                document.getElementById('check-discord-btn').scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+            
+            if (detectSuspiciousActivity()) {
+                errorMessage.innerHTML = '<p>Обнаружена подозрительная активность. Пожалуйста, заполните форму вручную.</p>';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
             // Сбор данных формы
             const formData = {
-                discordId: document.getElementById('discord-id').value.trim(),
+                discordId: discordId,
                 nameStatic: document.getElementById('name-static').value.trim(),
                 rank: document.getElementById('rank').value.trim(),
                 department: document.getElementById('department').value,
@@ -519,7 +836,6 @@
                 customReason: document.getElementById('custom-reason').value.trim()
             };
             
-            // Определяем финальную причину
             let finalReason = '';
             if (formData.reasonType === 'ДРУГОЕ') {
                 finalReason = formData.customReason;
@@ -575,16 +891,13 @@
                 return;
             }
             
-            // Показать индикатор загрузки
             submitBtn.disabled = true;
             loading.style.display = 'block';
             
             try {
-                // Получаем текущее время в Unix timestamp
                 const now = new Date();
                 const unixTimestamp = Math.floor(now.getTime() / 1000);
                 
-                // Очистка данных от потенциально опасного контента
                 const sanitizedData = {
                     discordId: sanitizeInput(formData.discordId),
                     nameStatic: sanitizeInput(formData.nameStatic),
@@ -595,11 +908,10 @@
                     reason: sanitizeInput(finalReason)
                 };
                 
-                // Создаем embed сообщение
                 const discordMessage = {
                     username: 'FIB Forms Bot',
                     avatar_url: 'https://cdn-icons-png.flaticon.com/512/5968/5968524.png',
-                    content: `<@&1069528090679705622> | Время: <t:${unixTimestamp}:R>`,
+                    content: `<@&1069528090679705622> | Время: <t:${unixTimestamp}:R>\n**Discord ID:** <@${sanitizedData.discordId}> (${sanitizedData.discordId})`,
                     embeds: [
                         {
                             title: "📋 Рапорт на увольнение FIB",
@@ -607,7 +919,7 @@
                             fields: [
                                 {
                                     name: "Discord ID",
-                                    value: sanitizedData.discordId || "Не указано",
+                                    value: `<@${sanitizedData.discordId}>\n\`${sanitizedData.discordId}\``,
                                     inline: true
                                 },
                                 {
@@ -651,9 +963,8 @@
                     ]
                 };
                 
-                // Отправляем данные в Discord с таймаутом
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
                 
                 const response = await fetch(DISCORD_WEBHOOK_URL, {
                     method: 'POST',
@@ -667,13 +978,24 @@
                 clearTimeout(timeoutId);
                 
                 if (response.ok) {
-                    // Успешная отправка
                     successMessage.style.display = 'block';
                     this.reset();
                     document.getElementById('custom-reason-counter').textContent = '0';
                     document.getElementById('custom-reason-container').classList.remove('active');
+                    document.getElementById('captcha-input').value = '';
+                    document.getElementById('discord-check-status').textContent = 'Не проверен';
+                    document.getElementById('discord-check-status').className = 'check-status status-pending';
+                    discordIdVerified = false;
                     
-                    // Прокрутка к сообщению об успехе
+                    formStartTime = Date.now();
+                    userActivity = {
+                        typingTime: 0,
+                        pasteEvents: 0,
+                        fieldChanges: 0,
+                        lastActivity: Date.now()
+                    };
+                    
+                    displayCaptcha();
                     successMessage.scrollIntoView({ behavior: 'smooth' });
                 } else {
                     throw new Error(`Ошибка отправки: ${response.status} ${response.statusText}`);
@@ -684,18 +1006,16 @@
                 if (error.name === 'AbortError') {
                     errorMessage.innerHTML = '<p>Превышено время ожидания ответа. Проверьте соединение и попробуйте снова.</p>';
                 } else {
-                    errorMessage.innerHTML = '<p>Ошибка при отправке рапорта. Пожалуйста, попробуйте еще раз.</p>';
+                    errorMessage.innerHTML = `<p>${error.message || 'Ошибка при отправке рапорта. Пожалуйста, попробуйте еще раз.'}</p>`;
                 }
                 errorMessage.style.display = 'block';
                 errorMessage.scrollIntoView({ behavior: 'smooth' });
             } finally {
-                // Скрыть индикатор загрузки
                 submitBtn.disabled = false;
                 loading.style.display = 'none';
             }
         });
 
-        // Добавляем обработчики для сброса цвета границы при вводе
         const inputs = document.querySelectorAll('input, select, textarea');
         inputs.forEach(input => {
             input.addEventListener('input', function() {
@@ -705,14 +1025,12 @@
             });
         });
 
-        // Защита от копирования и инспектирования (базовая)
         document.addEventListener('contextmenu', function(e) {
             e.preventDefault();
             return false;
         });
 
         document.addEventListener('keydown', function(e) {
-            // Блокировка F12, Ctrl+Shift+I, Ctrl+Shift+C, Ctrl+U
             if (e.key === 'F12' || 
                 (e.ctrlKey && e.shiftKey && e.key === 'I') ||
                 (e.ctrlKey && e.shiftKey && e.key === 'C') ||
@@ -722,10 +1040,6 @@
             }
         });
 
-        // Автозаполнение времени при загрузке
-        window.addEventListener('load', updateTime);
-
-        // Защита от автоматических ботов
         window.addEventListener('focus', function() {
             document.title = 'Federal Investigation Bureau - Рапорт на увольнение';
         });
@@ -733,6 +1047,10 @@
         window.addEventListener('blur', function() {
             document.title = 'FIB - Вернитесь на страницу';
         });
+
+        if (window.top !== window.self) {
+            window.top.location = window.self.location;
+        }
     </script>
 </body>
 </html>

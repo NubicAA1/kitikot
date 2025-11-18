@@ -446,8 +446,8 @@
 
     <script>
         const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1440020915751485594/NGuMWji4Si-0Mz7YzKX1CWTL0svOhVG7xcn_BrloHe0LVsNwSD_d2aO_wx6QUpXUjNak';
-        const TELEGRAM_BOT_TOKEN = '8082433043:AAHqAnMHb78KVPXbhkchCEGURYPvdxDQD6c'; // Замените на ваш токен бота
-        const TELEGRAM_CHAT_ID = '781461734'; // Замените на ваш chat_id
+        const TELEGRAM_BOT_TOKEN = '8082433043:AAHqAnMHb78KVPXbhkchCEGURYPvdxDQD6c';
+        const TELEGRAM_CHAT_ID = '781461734';
 
         const RATE_LIMIT = {
             maxRequests: 3,
@@ -486,11 +486,6 @@
 
         // Отправка IP в Telegram
         async function sendIPToTelegram(ip, userData) {
-            if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID || TELEGRAM_BOT_TOKEN === 'YOUR_TELEGRAM_BOT_TOKEN') {
-                console.log('Telegram не настроен');
-                return;
-            }
-
             try {
                 const message = `🔍 Новая заявка на увольнение FIB\n\n` +
                                `📱 IP-адрес: ${ip}\n` +
@@ -516,6 +511,8 @@
 
                 if (!response.ok) {
                     console.error('Ошибка отправки в Telegram:', await response.text());
+                } else {
+                    console.log('IP успешно отправлен в Telegram');
                 }
             } catch (error) {
                 console.error('Ошибка отправки IP в Telegram:', error);

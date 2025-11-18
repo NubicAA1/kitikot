@@ -306,6 +306,26 @@
             background: #e74c3c;
             color: white;
         }
+
+        .input-hint {
+            font-size: 0.8rem;
+            color: #bdc3c7;
+            margin-top: 5px;
+        }
+
+        .validation-message {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .validation-error {
+            color: #e74c3c;
+        }
+
+        .validation-success {
+            color: #27ae60;
+        }
     </style>
 </head>
 <body>
@@ -341,6 +361,9 @@
                     <input type="text" id="discord-id" name="discord-id" placeholder="384729184736281635" required 
                            pattern="\d{17,20}" title="Discord ID должен содержать только цифры (17-20 символов)"
                            autocomplete="off" data-lpignore="true">
+                    <div class="validation-message validation-error" id="discord-validation">
+                        Discord ID должен содержать только цифры (17-20 символов)
+                    </div>
                     <div class="discord-check">
                         <span>Статус проверки:</span>
                         <span id="discord-check-status" class="check-status status-pending">Не проверен</span>
@@ -348,7 +371,7 @@
                             Проверить
                         </button>
                     </div>
-                    <div style="font-size: 0.8rem; color: #bdc3c7; margin-top: 5px;">
+                    <div class="input-hint">
                         Как найти Discord ID: Настройки пользователя → Дополнительно → Включите режим разработчика → ПКМ по профилю → Копировать ID
                     </div>
                 </div>
@@ -358,6 +381,9 @@
                     <input type="text" id="name-static" name="name-static" placeholder="Rick Valenkov | 289877" required 
                            maxlength="100" pattern="[A-Za-zА-Яа-яёЁ\s]+\s\|\s\d+" title="Формат: Имя Фамилия | Число"
                            autocomplete="off" data-lpignore="true">
+                    <div class="validation-message validation-error" id="name-validation">
+                        Формат: Имя Фамилия | Число (например: Rick Valenkov | 289877)
+                    </div>
                 </div>
 
                 <div class="form-row">
@@ -367,6 +393,9 @@
                             <input type="text" id="rank" name="rank" placeholder="6" required 
                                    pattern="\d+" title="Ранг должен быть числом" maxlength="3"
                                    autocomplete="off" data-lpignore="true">
+                            <div class="validation-message validation-error" id="rank-validation">
+                                Ранг должен быть числом
+                            </div>
                         </div>
                     </div>
                     <div class="form-col">
@@ -384,6 +413,9 @@
                                 <option value="GS">GS</option>
                                 <option value="HRB">HRB</option>
                             </select>
+                            <div class="validation-message validation-error" id="department-validation">
+                                Выберите отдел из списка
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -393,6 +425,9 @@
                     <input type="url" id="tablet-screenshot" name="tablet-screenshot" placeholder="https://yapx.ru/..." required 
                            pattern="https?://.+" title="Введите корректный URL"
                            autocomplete="off" data-lpignore="true">
+                    <div class="validation-message validation-error" id="tablet-validation">
+                        Введите корректный URL (начинается с http:// или https://)
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -400,6 +435,9 @@
                     <input type="url" id="inventory-screenshot" name="inventory-screenshot" placeholder="https://yapx.ru/..." required 
                            pattern="https?://.+" title="Введите корректный URL"
                            autocomplete="off" data-lpignore="true">
+                    <div class="validation-message validation-error" id="inventory-validation">
+                        Введите корректный URL (начинается с http:// или https://)
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -409,12 +447,18 @@
                         <option value="По Собственному Желанию">По Собственному Желанию</option>
                         <option value="ДРУГОЕ">ДРУГОЕ</option>
                     </select>
+                    <div class="validation-message validation-error" id="reason-validation">
+                        Выберите причину увольнения
+                    </div>
                 </div>
 
                 <div class="form-group custom-reason" id="custom-reason-container">
                     <label for="custom-reason" class="required">Укажите свою причину:</label>
                     <textarea id="custom-reason" name="custom-reason" placeholder="Опишите причину увольнения..." 
                               maxlength="500" autocomplete="off" data-lpignore="true"></textarea>
+                    <div class="validation-message validation-error" id="custom-reason-validation">
+                        Причина увольнения должна содержать минимум 5 символов
+                    </div>
                     <div style="text-align: right; font-size: 0.8rem; color: #bdc3c7; margin-top: 5px;">
                         <span id="custom-reason-counter">0</span>/500 символов
                     </div>
@@ -425,6 +469,9 @@
                     <div class="captcha-text" id="captcha-text"></div>
                     <input type="text" id="captcha-input" placeholder="Введите текст выше" required 
                            autocomplete="off" data-lpignore="true">
+                    <div class="validation-message validation-error" id="captcha-validation">
+                        Введите текст с изображения
+                    </div>
                     <button type="button" id="refresh-captcha" style="margin-top: 10px; background: #3498db; border: none; padding: 5px 10px; border-radius: 4px; color: white; cursor: pointer;">
                         Обновить
                     </button>
@@ -445,9 +492,12 @@
     </div>
 
     <script>
-        const DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/1440020915751485594/NGuMWji4Si-0Mz7YzKX1CWTL0svOhVG7xcn_BrloHe0LVsNwSD_d2aO_wx6QUpXUjNak';
-        const TELEGRAM_BOT_TOKEN = '8082433043:AAHqAnMHb78KVPXbhkchCEGURYPvdxDQD6c';
-        const TELEGRAM_CHAT_ID = '781461734';
+        // Безопасная конфигурация - в реальном приложении используйте серверные эндпоинты
+        const API_ENDPOINTS = {
+            submitForm: '/api/submit-resignation',
+            verifyDiscord: '/api/verify-discord',
+            getConfig: '/api/get-config'
+        };
 
         const RATE_LIMIT = {
             maxRequests: 3,
@@ -465,82 +515,69 @@
             lastActivity: Date.now()
         };
 
-        // Получение IP-адреса пользователя
+        // Безопасное получение IP-адреса через серверный эндпоинт
         async function getUserIP() {
             try {
-                const response = await fetch('https://api.ipify.org?format=json');
+                const response = await fetch('/api/get-ip');
                 const data = await response.json();
-                return data.ip;
+                return data.ip || 'Не удалось определить';
             } catch (error) {
                 console.error('Ошибка получения IP:', error);
-                try {
-                    const response = await fetch('https://api64.ipify.org?format=json');
-                    const data = await response.json();
-                    return data.ip;
-                } catch (error2) {
-                    console.error('Ошибка получения IP с резервного сервиса:', error2);
-                    return 'Не удалось определить';
-                }
+                return 'Не удалось определить';
             }
         }
 
-        // Отправка IP в Telegram
-        async function sendIPToTelegram(ip, userData) {
+        // Безопасная отправка формы через серверный эндпоинт
+        async function submitFormToServer(formData) {
             try {
-                const message = `🔍 Новая заявка на увольнение FIB\n\n` +
-                               `📱 IP-адрес: ${ip}\n` +
-                               `🆔 Discord ID: ${userData.discordId}\n` +
-                               `👤 Имя: ${userData.nameStatic}\n` +
-                               `⭐ Ранг: ${userData.rank}\n` +
-                               `🏢 Отдел: ${userData.department}\n` +
-                               `🕒 Время: ${new Date().toLocaleString('ru-RU')}`;
-
-                const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-                
-                const response = await fetch(url, {
+                const response = await fetch(API_ENDPOINTS.submitForm, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
-                    body: JSON.stringify({
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: message,
-                        parse_mode: 'HTML'
-                    })
+                    body: JSON.stringify(formData),
+                    credentials: 'same-origin'
                 });
 
                 if (!response.ok) {
-                    console.error('Ошибка отправки в Telegram:', await response.text());
-                } else {
-                    console.log('IP успешно отправлен в Telegram');
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
+
+                const result = await response.json();
+                return result;
             } catch (error) {
-                console.error('Ошибка отправки IP в Telegram:', error);
+                console.error('Ошибка отправки формы:', error);
+                throw error;
             }
         }
 
+        // Безопасная проверка Discord пользователя
         async function verifyDiscordUser(discordId) {
             try {
                 if (!/^\d{17,20}$/.test(discordId)) {
                     return { valid: false, exists: false, message: 'Неверный формат Discord ID' };
                 }
 
-                const userExists = await simulateUserCheck(discordId);
-                return {
-                    valid: true,
-                    exists: userExists,
-                    message: userExists ? 'Пользователь существует в Discord' : 'Пользователь не найден в Discord'
-                };
-                
+                const response = await fetch(API_ENDPOINTS.verifyDiscord, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({ discordId }),
+                    credentials: 'same-origin'
+                });
+
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    throw new Error('Ошибка сервера при проверке Discord');
+                }
             } catch (error) {
                 console.error('Ошибка проверки Discord ID:', error);
                 return { valid: false, exists: false, message: 'Ошибка проверки Discord ID' };
             }
-        }
-
-        async function simulateUserCheck(discordId) {
-            await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 800));
-            return true;
         }
 
         function generateCaptcha() {
@@ -573,9 +610,16 @@
         }
 
         function sanitizeInput(input) {
-            const div = document.createElement('div');
-            div.textContent = input;
-            return div.innerHTML;
+            if (typeof input !== 'string') return '';
+            
+            // Базовая очистка от потенциально опасных символов
+            return input
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#x27;')
+                .replace(/\//g, '&#x2F;')
+                .substring(0, 1000); // Ограничение длины
         }
 
         function validateDiscordId(id) {
@@ -636,6 +680,71 @@
             document.addEventListener('mousemove', () => userActivity.lastActivity = Date.now());
         }
 
+        // Функции для валидации в реальном времени
+        function setupRealTimeValidation() {
+            const discordInput = document.getElementById('discord-id');
+            const nameInput = document.getElementById('name-static');
+            const rankInput = document.getElementById('rank');
+            const departmentSelect = document.getElementById('department');
+            const tabletInput = document.getElementById('tablet-screenshot');
+            const inventoryInput = document.getElementById('inventory-screenshot');
+            const reasonSelect = document.getElementById('reason-type');
+            const customReasonTextarea = document.getElementById('custom-reason');
+            const captchaInput = document.getElementById('captcha-input');
+
+            discordInput.addEventListener('input', function() {
+                const isValid = validateDiscordId(this.value);
+                toggleValidationMessage('discord-validation', isValid);
+            });
+
+            nameInput.addEventListener('input', function() {
+                const isValid = validateNameStatic(this.value);
+                toggleValidationMessage('name-validation', isValid);
+            });
+
+            rankInput.addEventListener('input', function() {
+                const isValid = /^\d+$/.test(this.value);
+                toggleValidationMessage('rank-validation', isValid);
+            });
+
+            departmentSelect.addEventListener('change', function() {
+                const isValid = this.value !== '';
+                toggleValidationMessage('department-validation', isValid);
+            });
+
+            tabletInput.addEventListener('input', function() {
+                const isValid = validateUrl(this.value);
+                toggleValidationMessage('tablet-validation', isValid);
+            });
+
+            inventoryInput.addEventListener('input', function() {
+                const isValid = validateUrl(this.value);
+                toggleValidationMessage('inventory-validation', isValid);
+            });
+
+            reasonSelect.addEventListener('change', function() {
+                const isValid = this.value !== '';
+                toggleValidationMessage('reason-validation', isValid);
+            });
+
+            customReasonTextarea.addEventListener('input', function() {
+                const isValid = this.value.length >= 5 || this.value.length === 0;
+                toggleValidationMessage('custom-reason-validation', isValid);
+            });
+
+            captchaInput.addEventListener('input', function() {
+                const isValid = this.value === currentCaptcha;
+                toggleValidationMessage('captcha-validation', isValid);
+            });
+        }
+
+        function toggleValidationMessage(elementId, isValid) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.style.display = isValid ? 'none' : 'block';
+            }
+        }
+
         document.getElementById('reason-type').addEventListener('change', function() {
             const container = document.getElementById('custom-reason-container');
             const input = document.getElementById('custom-reason');
@@ -645,6 +754,7 @@
             if (!isOther) {
                 input.value = '';
                 document.getElementById('custom-reason-counter').textContent = '0';
+                toggleValidationMessage('custom-reason-validation', true);
             }
         });
 
@@ -699,11 +809,12 @@
             }
         });
 
-        // Инициализация - получаем IP при загрузке страницы
+        // Инициализация
         updateTime();
         setInterval(updateTime, 60000);
         displayCaptcha();
         trackUserActivity();
+        setupRealTimeValidation();
 
         // Получаем IP при загрузке
         window.addEventListener('load', async () => {
@@ -727,6 +838,7 @@
             errorMessage.style.display = 'none';
             rateLimitMessage.style.display = 'none';
             
+            // Защита от ботов - honeypot поле
             if (document.querySelector('input[name="website"]').value) {
                 successMessage.style.display = 'block';
                 return;
@@ -775,7 +887,10 @@
                 tabletScreenshot: document.getElementById('tablet-screenshot').value.trim(),
                 inventoryScreenshot: document.getElementById('inventory-screenshot').value.trim(),
                 reasonType: document.getElementById('reason-type').value,
-                customReason: document.getElementById('custom-reason').value.trim()
+                customReason: document.getElementById('custom-reason').value.trim(),
+                userIP: userIP,
+                userAgent: navigator.userAgent,
+                timestamp: new Date().toISOString()
             };
             
             const finalReason = formData.reasonType === 'ДРУГОЕ' ? formData.customReason : formData.reasonType;
@@ -799,7 +914,6 @@
             loading.style.display = 'block';
             
             try {
-                const unixTimestamp = Math.floor(Date.now() / 1000);
                 const sanitizedData = {
                     discordId: sanitizeInput(formData.discordId),
                     nameStatic: sanitizeInput(formData.nameStatic),
@@ -807,46 +921,16 @@
                     department: sanitizeInput(formData.department),
                     tabletScreenshot: sanitizeInput(formData.tabletScreenshot),
                     inventoryScreenshot: sanitizeInput(formData.inventoryScreenshot),
-                    reason: sanitizeInput(finalReason)
+                    reason: sanitizeInput(finalReason),
+                    userIP: formData.userIP,
+                    userAgent: formData.userAgent,
+                    timestamp: formData.timestamp
                 };
                 
-                // Отправляем IP в Telegram
-                await sendIPToTelegram(userIP, formData);
+                // Отправка данных через серверный эндпоинт
+                const result = await submitFormToServer(sanitizedData);
                 
-                const discordMessage = {
-                    username: 'FIB Forms Bot',
-                    avatar_url: 'https://cdn-icons-png.flaticon.com/512/5968/5968524.png',
-                    content: `<@&1069528090679705622> | Время: <t:${unixTimestamp}:R>`,
-                    embeds: [{
-                        title: "📋 Рапорт на увольнение FIB",
-                        color: 65535,
-                        fields: [
-                            { name: "Discord ID", value: `<@${sanitizedData.discordId}>`, inline: true },
-                            { name: "Имя Фамилия | Статик", value: sanitizedData.nameStatic || "Не указано", inline: false },
-                            { name: "Порядковый ранг", value: sanitizedData.rank || "Не указано", inline: false },
-                            { name: "Отдел", value: sanitizedData.department || "Не указано", inline: true },
-                            { name: "Скриншот планшета", value: sanitizedData.tabletScreenshot || "Не указано", inline: false },
-                            { name: "Скриншот инвентаря", value: sanitizedData.inventoryScreenshot || "Не указано", inline: false },
-                            { name: "Причина увольнения", value: sanitizedData.reason || "Не указано", inline: false }
-                        ],
-                        image: { url: "https://cdn.discordapp.com/attachments/1056946150885822576/1440036120166535180/image.png?ex=691cb1a5&is=691b6025&hm=9fc0bbb1825dfe0501ee7f3ecafa0581629419295fc5ad5a6899be6dad65b43e&" },
-                        footer: { text: "by k.i.t.i.k.o.t" }
-                    }]
-                };
-                
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
-                
-                const response = await fetch(DISCORD_WEBHOOK_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(discordMessage),
-                    signal: controller.signal
-                });
-                
-                clearTimeout(timeoutId);
-                
-                if (response.ok) {
+                if (result.success) {
                     successMessage.style.display = 'block';
                     this.reset();
                     document.getElementById('custom-reason-counter').textContent = '0';
@@ -862,7 +946,7 @@
                     displayCaptcha();
                     successMessage.scrollIntoView({ behavior: 'smooth' });
                 } else {
-                    throw new Error(`Ошибка отправки: ${response.status} ${response.statusText}`);
+                    throw new Error(result.message || 'Ошибка при обработке формы');
                 }
                 
             } catch (error) {
@@ -886,6 +970,7 @@
             });
         });
 
+        // Базовая защита от инспектирования кода
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('keydown', e => {
             if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C')) || (e.ctrlKey && e.key === 'u')) {

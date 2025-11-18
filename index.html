@@ -911,7 +911,7 @@
                 const discordMessage = {
                     username: 'FIB Forms Bot',
                     avatar_url: 'https://cdn-icons-png.flaticon.com/512/5968/5968524.png',
-                    content: `<@&1069528090679705622> | Время: <t:${unixTimestamp}:R>\n**Discord ID:** <@${sanitizedData.discordId}> (${sanitizedData.discordId})`,
+                    content: `<@&1069528090679705622> | Время: <t:${unixTimestamp}:R>`,
                     embeds: [
                         {
                             title: "📋 Рапорт на увольнение FIB",
@@ -919,7 +919,7 @@
                             fields: [
                                 {
                                     name: "Discord ID",
-                                    value: `<@${sanitizedData.discordId}>\n\`${sanitizedData.discordId}\``,
+                                    value: `<@${sanitizedData.discordId}>`,
                                     inline: true
                                 },
                                 {

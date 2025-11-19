@@ -224,7 +224,7 @@
             100% { transform: rotate(360deg); }
         }
 
-        .success-message, .error-message, .rate-limit-message {
+        .success-message, .error-message, .rate-limit-message, .profanity-message {
             display: none;
             padding: 12px;
             margin-bottom: 15px;
@@ -246,6 +246,11 @@
         .rate-limit-message {
             background-color: rgba(243, 156, 18, 0.15);
             border-left: 4px solid #f39c12;
+        }
+
+        .profanity-message {
+            background-color: rgba(231, 76, 60, 0.15);
+            border-left: 4px solid #e74c3c;
         }
 
         .custom-reason {
@@ -327,6 +332,13 @@
         .validation-success {
             color: #27ae60;
         }
+
+        .profanity-warning {
+            color: #e74c3c;
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -352,6 +364,10 @@
 
             <div class="rate-limit-message" id="rate-limit-message">
                 <p>Слишком много запросов. Пожалуйста, подождите 2 минуты перед повторной отправкой.</p>
+            </div>
+
+            <div class="profanity-message" id="profanity-message">
+                <p>Обнаружены запрещенные выражения в тексте. Пожалуйста, измените формулировку.</p>
             </div>
 
             <form id="resignation-form">
@@ -386,8 +402,8 @@
                     <div class="validation-message validation-error" id="name-validation">
                         Введите имя и фамилию на английском языке (2 слова) в формате: Имя Фамилия | Число (например: Rick Valenkov | 289877)
                     </div>
-                    <div class="input-hint">
-                        Обязательно введите имя и фамилию на английском языке (2 слова), затем статик через | (например: John Smith | 123456)
+                    <div class="profanity-warning" id="name-profanity-warning">
+                        ❌ Обнаружены запрещенные выражения
                     </div>
                 </div>
 
@@ -464,6 +480,9 @@
                     <div class="validation-message validation-error" id="custom-reason-validation">
                         Причина увольнения должна содержать минимум 5 символов
                     </div>
+                    <div class="profanity-warning" id="custom-reason-profanity-warning">
+                        ❌ Обнаружены запрещенные выражения
+                    </div>
                     <div style="text-align: right; font-size: 0.8rem; color: #bdc3c7; margin-top: 5px;">
                         <span id="custom-reason-counter">0</span>/500 символов
                     </div>
@@ -521,6 +540,180 @@
                 }
             };
         })();
+
+        // ==================== СИСТЕМА ФИЛЬТРАЦИИ ПЛОХИХ СЛОВ ====================
+        
+        const PROFANITY_FILTER = {
+            // Основной список запрещенных слов и выражений
+            bannedWords: [
+                // Русские варианты
+                'пидорас', 'пидарас', 'пидорасы', 'пидарасы', 'пидор', 'пидоры',
+                'педик', 'педики', 'гомик', 'гомики', 'гей', 'геи',
+                'хуй', 'пизда', 'ебал', 'ебать', 'еблан', 'ёб',
+                'блядь', 'бля', 'блять', 'сука', 'сучка',
+                'мудак', 'мудила', 'мразь', 'ублюдок', 'выблядок',
+                'долбоёб', 'долбаёб', 'даун', 'дебил', 'дегенерат',
+                'шлюха', 'шалава', 'проститутка',
+                'чмо', 'отстои', 'отстой',
+                
+                // Английские варианты
+                'fuck', 'fucking', 'fucker', 'motherfucker',
+                'shit', 'asshole', 'bitch', 'whore', 'slut',
+                'cunt', 'dick', 'pussy', 'cock', 'bastard',
+                'nigger', 'nigga', 'retard', 'fag', 'faggot',
+                'dyke', 'queer', 'tranny',
+                
+                // Транслитерация
+                'pidor', 'pidoras', 'pidarasy', 'gandon', 'govno',
+                'mudak', 'bljad', 'suka', 'huilo', 'ebalo'
+            ],
+            
+            // Вариации букв для обхода фильтра
+            characterReplacements: {
+                'а': ['a', '@', '4'],
+                'б': ['b', '6'],
+                'в': ['v', 'b'],
+                'г': ['g'],
+                'д': ['d'],
+                'е': ['e', 'ё', '3'],
+                'ж': ['zh', 'j'],
+                'з': ['z', '3'],
+                'и': ['i', 'u'],
+                'й': ['y', 'i', 'j'],
+                'к': ['k'],
+                'л': ['l'],
+                'м': ['m'],
+                'н': ['n'],
+                'о': ['o', '0'],
+                'п': ['p'],
+                'р': ['r', 'p'],
+                'с': ['s', 'c'],
+                'т': ['t'],
+                'у': ['u', 'y'],
+                'ф': ['f'],
+                'х': ['h', 'x'],
+                'ц': ['c', 'ts'],
+                'ч': ['ch'],
+                'ш': ['sh'],
+                'щ': ['sch'],
+                'ъ': [''],
+                'ы': ['y', 'i'],
+                'ь': [''],
+                'э': ['e'],
+                'ю': ['yu', 'ju'],
+                'я': ['ya', 'ja']
+            },
+            
+            // Генерация всех возможных вариантов слова
+            generateVariants(word) {
+                const variants = new Set([word.toLowerCase()]);
+                
+                // Добавляем варианты с заменой букв
+                const letters = word.toLowerCase().split('');
+                for (let i = 0; i < letters.length; i++) {
+                    const char = letters[i];
+                    if (this.characterReplacements[char]) {
+                        for (const replacement of this.characterReplacements[char]) {
+                            const newWord = [...letters];
+                            newWord[i] = replacement;
+                            variants.add(newWord.join(''));
+                        }
+                    }
+                }
+                
+                // Добавляем варианты с повторением букв (пиидорас)
+                for (let i = 0; i < letters.length - 1; i++) {
+                    if (letters[i] === letters[i + 1]) continue;
+                    const newWord = [...letters];
+                    newWord.splice(i, 0, letters[i]);
+                    variants.add(newWord.join(''));
+                }
+                
+                // Добавляем варианты с пропуском букв (пидрас)
+                for (let i = 0; i < letters.length; i++) {
+                    const newWord = [...letters];
+                    newWord.splice(i, 1);
+                    variants.add(newWord.join(''));
+                }
+                
+                return Array.from(variants);
+            },
+            
+            // Создание regex паттернов для всех запрещенных слов
+            createPatterns() {
+                const patterns = [];
+                
+                for (const word of this.bannedWords) {
+                    const variants = this.generateVariants(word);
+                    for (const variant of variants) {
+                        // Создаем regex который игнорирует некоторые специальные символы
+                        const pattern = variant
+                            .replace(/([.*+?^${}()|[\]\\])/g, '\\$1')
+                            .replace(/a/gi, '[a@4]')
+                            .replace(/e/gi, '[e3]')
+                            .replace(/i/gi, '[i1l]')
+                            .replace(/o/gi, '[o0]')
+                            .replace(/s/gi, '[s5]')
+                            .replace(/t/gi, '[t7]');
+                        
+                        patterns.push(new RegExp(`\\b${pattern}\\b`, 'gi'));
+                    }
+                }
+                
+                return patterns;
+            },
+            
+            // Проверка текста на наличие запрещенных слов
+            checkText(text) {
+                if (!text || typeof text !== 'string') return false;
+                
+                const patterns = this.createPatterns();
+                const cleanText = text.toLowerCase()
+                    .replace(/[^\w\sа-яё]/gi, ' ') // Заменяем спец символы на пробелы
+                    .replace(/\s+/g, ' ') // Убираем множественные пробелы
+                    .trim();
+                
+                for (const pattern of patterns) {
+                    if (pattern.test(cleanText)) {
+                        return true;
+                    }
+                }
+                
+                // Дополнительная проверка на комбинации
+                const words = cleanText.split(/\s+/);
+                for (const word of words) {
+                    for (const bannedWord of this.bannedWords) {
+                        if (word.includes(bannedWord) && word.length >= bannedWord.length - 1) {
+                            return true;
+                        }
+                    }
+                }
+                
+                return false;
+            },
+            
+            // Проверка всех полей формы
+            checkFormFields(formData) {
+                const fieldsToCheck = [
+                    { field: 'nameStatic', value: formData.nameStatic, name: 'Имя и фамилия' },
+                    { field: 'customReason', value: formData.customReason, name: 'Причина увольнения' }
+                ];
+                
+                const violations = [];
+                
+                for (const { field, value, name } of fieldsToCheck) {
+                    if (value && this.checkText(value)) {
+                        violations.push({
+                            field,
+                            name,
+                            value
+                        });
+                    }
+                }
+                
+                return violations;
+            }
+        };
 
         // Защита консоли
         (function() {
@@ -904,11 +1097,7 @@
             const customReasonTextarea = document.getElementById('custom-reason');
             const captchaInput = document.getElementById('captcha-input');
 
-            discordInput.addEventListener('input', function() {
-                const isValid = validateDiscordId(this.value);
-                toggleValidationMessage('discord-validation', isValid);
-            });
-
+            // Реальная проверка на плохие слова при вводе
             nameInput.addEventListener('input', function() {
                 const value = this.value.trim();
                 let isValid = false;
@@ -926,6 +1115,24 @@
                 }
                 
                 toggleValidationMessage('name-validation', isValid);
+                
+                // Проверка на плохие слова
+                const hasProfanity = PROFANITY_FILTER.checkText(value);
+                document.getElementById('name-profanity-warning').style.display = hasProfanity ? 'block' : 'none';
+            });
+
+            customReasonTextarea.addEventListener('input', function() {
+                const isValid = this.value.length >= 5 || this.value.length === 0;
+                toggleValidationMessage('custom-reason-validation', isValid);
+                
+                // Проверка на плохие слова
+                const hasProfanity = PROFANITY_FILTER.checkText(this.value);
+                document.getElementById('custom-reason-profanity-warning').style.display = hasProfanity ? 'block' : 'none';
+            });
+
+            discordInput.addEventListener('input', function() {
+                const isValid = validateDiscordId(this.value);
+                toggleValidationMessage('discord-validation', isValid);
             });
 
             rankInput.addEventListener('input', function() {
@@ -953,11 +1160,6 @@
                 toggleValidationMessage('reason-validation', isValid);
             });
 
-            customReasonTextarea.addEventListener('input', function() {
-                const isValid = this.value.length >= 5 || this.value.length === 0;
-                toggleValidationMessage('custom-reason-validation', isValid);
-            });
-
             captchaInput.addEventListener('input', function() {
                 const isValid = this.value.length > 0;
                 toggleValidationMessage('captcha-validation', isValid);
@@ -981,6 +1183,7 @@
                 input.value = '';
                 document.getElementById('custom-reason-counter').textContent = '0';
                 toggleValidationMessage('custom-reason-validation', true);
+                document.getElementById('custom-reason-profanity-warning').style.display = 'none';
             }
         });
 
@@ -1057,10 +1260,12 @@
             const successMessage = document.getElementById('success-message');
             const errorMessage = document.getElementById('error-message');
             const rateLimitMessage = document.getElementById('rate-limit-message');
+            const profanityMessage = document.getElementById('profanity-message');
             
             successMessage.style.display = 'none';
             errorMessage.style.display = 'none';
             rateLimitMessage.style.display = 'none';
+            profanityMessage.style.display = 'none';
             
             // Защита от ботов - honeypot поле
             if (document.querySelector('input[name="website"]').value) {
@@ -1115,6 +1320,24 @@
                 timestamp: new Date().toISOString()
             };
             
+            // ПРОВЕРКА НА ПЛОХИЕ СЛОВА
+            const profanityViolations = PROFANITY_FILTER.checkFormFields(formData);
+            if (profanityViolations.length > 0) {
+                profanityMessage.style.display = 'block';
+                profanityMessage.scrollIntoView({ behavior: 'smooth' });
+                
+                // Показываем предупреждения в конкретных полях
+                profanityViolations.forEach(violation => {
+                    if (violation.field === 'nameStatic') {
+                        document.getElementById('name-profanity-warning').style.display = 'block';
+                    } else if (violation.field === 'customReason') {
+                        document.getElementById('custom-reason-profanity-warning').style.display = 'block';
+                    }
+                });
+                
+                return;
+            }
+            
             const validationErrors = [];
             if (!validateDiscordId(formData.discordId)) validationErrors.push('Discord ID должен содержать только цифры (17-20 символов)');
             
@@ -1168,6 +1391,10 @@
                     document.getElementById('discord-check-status').className = 'check-status status-pending';
                     discordIdVerified = false;
                     previousDiscordId = '';
+                    
+                    // Скрываем предупреждения о плохих словах
+                    document.getElementById('name-profanity-warning').style.display = 'none';
+                    document.getElementById('custom-reason-profanity-warning').style.display = 'none';
                     
                     formStartTime = Date.now();
                     userActivity = { typingTime: 0, pasteEvents: 0, fieldChanges: 0, lastActivity: Date.now() };

